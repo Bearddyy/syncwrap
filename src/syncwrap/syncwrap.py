@@ -12,25 +12,18 @@ def syncwrap(asyncfunc=None, timeout=None):
     def _syncwrap(asyncfunc):
         if not asyncio.iscoroutinefunction(asyncfunc):
             # If the function is not a coroutine, just return it.
+            print("asyncfunc is not a coroutine")
             return asyncfunc
 
-        async def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs):
             try:
                 # will raise a RuntimeError if no loop is running
                 loop = asyncio.get_running_loop()
-                if loop.is_running():
-                    return await asyncio.wait_for(asyncfunc(*args, **kwargs), timeout)
-                else:
-                    if timeout:
-                        return await asyncio.wait_for(asyncfunc(*args, **kwargs), timeout)
-                    else:
-                        return await loop.run_until_complete(asyncfunc(*args, **kwargs))
+                return asyncio.wait_for(asyncfunc(*args, **kwargs), timeout)                 
             except RuntimeError:
+                # Loop is not running, so create a new one.
                 loop = asyncio.new_event_loop()
-                if timeout:
-                    return await asyncio.wait_for(asyncfunc(*args, **kwargs), timeout)
-                else:
-                    return await loop.run_until_complete(asyncfunc(*args, **kwargs))
+                return loop.run_until_complete(asyncio.wait_for(asyncfunc(*args, **kwargs), timeout))
         return wrapper
     if asyncfunc is None:
         return _syncwrap
