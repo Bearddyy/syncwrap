@@ -26,11 +26,16 @@ def test_async_function():
     async def async_function(a, b=2):
         return a + b
 
-    # call using await
+    # call
     result = async_function(1, 2)
-
     assert result == 3
 
+    # call using await
+    async def temp_awaiter():
+        return await async_function(1, 2)
+    result = asyncio.run(temp_awaiter())
+    
+    assert result == 3
 
 def test_within_main_loop():
     async def main():
