@@ -131,3 +131,59 @@ def test_async_function_with_multiple_decorators():
     expected = ((1 + 2) + 1) * 2
     assert result == expected
 
+
+def test_standard_function_with_return_value():
+    @syncwrap
+    def standard_function():
+        return "Hello, World!"
+
+    result = standard_function()
+    assert result == "Hello, World!"
+
+def test_async_function_with_return_value():
+    @syncwrap
+    async def async_function():
+        return "Hello, World!"
+
+    result = asyncio.run(async_function())
+    assert result == "Hello, World!"
+
+def test_nested_standard_function_calls():
+    @syncwrap
+    def add(a, b):
+        return a + b
+
+    @syncwrap
+    def multiply(x, y):
+        return x * y
+
+    result = multiply(add(2, 3), 4)
+    assert result == 20
+
+def test_nested_async_function_calls():
+    @syncwrap
+    async def add(a, b):
+        return a + b
+
+    @syncwrap
+    async def multiply(x, y):
+        return x * y
+
+    @syncwrap
+    async def nested():
+        return await multiply(await add(2, 3), 4)
+
+    result = asyncio.run(nested())
+    assert result == 20
+
+def test_async_function_with_timeout():
+    @syncwrap(timeout=1)  # Set a 1-second timeout
+    async def async_function():
+        await asyncio.sleep(2)  # Sleep for 2 seconds
+
+    try:
+        result = asyncio.run(async_function())
+    except asyncio.TimeoutError:
+        assert True
+    else:
+        assert False, "Expected a TimeoutError, but none was raised"
