@@ -34,7 +34,7 @@ def test_async_function():
     async def temp_awaiter():
         return await async_function(1, 2)
     result = asyncio.run(temp_awaiter())
-    
+
     assert result == 3
 
 def test_within_main_loop():
@@ -196,6 +196,24 @@ def test_async_function_with_timeout():
         print(f'No exception raised, result: {result}')
         assert False, "Expected a TimeoutError, but none was raised"
 
+def test_sync_function_with_timeout():
+    # timeouts cannot be used with sync functions,
+    # so the timeout parameter should be raised
+    try:
+        @syncwrap(timeout=1)  # Set a 1-second timeout
+        def sync_function():
+            import time
+            time.sleep(10)  # Sleep for 2 seconds
+        
+        result = sync_function()
+    except ValueError:
+        assert True
+    except Exception as e:
+        assert False, "Expected a ValueError, but {e} was raised"
+    else:
+        assert False, "Expected a ValueError, but none was raised"
+        
+
 def test_inline_function():
     # Suppose you have an asynchronous function from an external library
     async def external_async_function(a, b):
@@ -220,3 +238,4 @@ def test_recusive_call():
 
     result = recursive_function(10)
     assert result == 55
+

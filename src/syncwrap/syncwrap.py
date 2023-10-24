@@ -10,11 +10,6 @@ def syncwrap(asyncfunc=None, timeout=None):
     '''
     # Note: nested decorator function is required to pass parameters like timeout.
     def _syncwrap(asyncfunc):
-        if not asyncio.iscoroutinefunction(asyncfunc):
-            # If the function is not a coroutine, just return it.
-            print("asyncfunc is not a coroutine")
-            return asyncfunc
-
         def wrapper(*args, **kwargs):
             try:
                 # will raise a RuntimeError if no loop is running
@@ -24,6 +19,13 @@ def syncwrap(asyncfunc=None, timeout=None):
                 # Loop is not running, so create a new one.
                 loop = asyncio.new_event_loop()
                 return loop.run_until_complete(asyncio.wait_for(asyncfunc(*args, **kwargs), timeout))
+
+        if not asyncio.iscoroutinefunction(asyncfunc):
+            # If the function is not a coroutine, just return it.
+            if timeout is None:
+                return asyncfunc
+            else:
+                raise ValueError("timeout parameter can only be used with async functions")
         return wrapper
     if asyncfunc is None:
         return _syncwrap
